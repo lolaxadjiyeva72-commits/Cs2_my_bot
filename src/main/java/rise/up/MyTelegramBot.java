@@ -8,10 +8,7 @@ import org.telegram.telegrambots.meta.api.methods.send.SendPhoto;
 import org.telegram.telegrambots.meta.api.methods.send.SendVideo;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
-import org.telegram.telegrambots.meta.api.objects.Message;
-import org.telegram.telegrambots.meta.api.objects.PhotoSize;
-import org.telegram.telegrambots.meta.api.objects.Update;
-import org.telegram.telegrambots.meta.api.objects.User;
+import org.telegram.telegrambots.meta.api.objects.*;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import rise.up.controller.MainController;
 
@@ -41,8 +38,28 @@ public class MyTelegramBot extends TelegramLongPollingBot {
        if(message.hasText()) {
            log(user, message.getText());
            mainController.handleText(user, message);
+       }else if (message.hasPhoto()) {
+           log(user,message.getPhoto());
+       } else if(message.hasVideo()){
+           log(user,message.getVideo().getFileId());
+           mainController.handleVideo(user,message);
        }
-   }
+       if (update.hasMessage() && update.getMessage().hasVideo()) {
+           long chatId = update.getMessage().getChatId();
+           Video video = update.getMessage().getVideo();
+           // SendVide class sidan obyekt yaratamiz
+           SendVideo sendVideo = new SendVideo();
+           sendVideo.setVideo(new InputFile(video.getFileId()));
+           sendVideo.setChatId(chatId);
+
+           try {
+               execute(sendVideo);
+           } catch (TelegramApiException e) {
+               throw new RuntimeException(e);
+           }
+       }
+    }
+
     }
 
     public void log(User user, String text) {
